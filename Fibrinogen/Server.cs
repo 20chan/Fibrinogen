@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Fibrinogen
 {
-    public delegate string WebCallback(HttpListenerRequest request);
+    public delegate void WebCallback(HttpListenerRequest request, HttpListenerResponse response);
     internal class Server
     {
         /// <summary>
@@ -55,12 +55,7 @@ namespace Fibrinogen
             {
                 var name = context.Request.Url.Segments[1].Replace("/", "");
                 var urlparams = context.Request.Url.Segments.Skip(2).Select(s => s.Replace("/", ""));
-                var res = callback(context.Request);
-                byte[] buf = Encoding.UTF8.GetBytes(res);
-                context.Response.ContentLength64 = buf.Length;
-                context.Response.ContentType = "text/html; charset=utf-8";
-                context.Response.ContentEncoding = Encoding.UTF8;
-                context.Response.OutputStream.Write(buf, 0, buf.Length);
+                callback(context.Request, context.Response);
             }
             catch { }
             finally
