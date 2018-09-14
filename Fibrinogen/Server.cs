@@ -9,7 +9,7 @@ using System.Reflection;
 namespace Fibrinogen
 {
     public delegate string WebCallback(HttpListenerRequest request);
-    public class Server
+    internal class Server
     {
         /// <summary>
         /// Port, default value is 80
