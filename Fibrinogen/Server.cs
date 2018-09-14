@@ -31,7 +31,7 @@ namespace Fibrinogen
 
         public static void Start()
         {
-            listener.Prefixes.Add($"http://localhost:{Port}/");
+            listener.Prefixes.Add($"http://*:{Port}/");
             listener.Start();
             ThreadPool.QueueUserWorkItem(RoutingThread);
         }
