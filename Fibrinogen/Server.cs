@@ -17,36 +17,35 @@ namespace Fibrinogen
         public static int Port = 80;
 
         static readonly HttpListener listener;
-        static readonly List<string> prefixes;
-        static readonly Dictionary<string, WebCallback> callbackMap;
+        static WebCallback callback;
 
         static Server()
         {
             listener = new HttpListener();
-            prefixes = new List<string>();
-            callbackMap = new Dictionary<string, WebCallback>();
         }
 
-        public static void Register(string prefix, WebCallback callback)
+        public static void Register(WebCallback webcallback)
         {
-            callbackMap.Add(prefix, callback);
-            prefixes.Add(prefix);
+            callback += webcallback;
         }
 
         public static void Start()
         {
-            if (prefixes.Count == 0)
-                throw new Exception("You have to add at least one prefix");
-            foreach (var p in prefixes)
-                listener.Prefixes.Add($"http://localhost:{Port}/{p}");
+            listener.Prefixes.Add($"http://localhost:{Port}/");
             listener.Start();
             ThreadPool.QueueUserWorkItem(RoutingThread);
+        }
+
+        public static void Stop()
+        {
+            listener.Stop();
+            listener.Close();
         }
 
         static void RoutingThread(object o)
         {
             while (listener.IsListening)
-                ThreadPool.QueueUserWorkItem((ctx) => Listen(ctx));
+                ThreadPool.QueueUserWorkItem((ctx) => Listen(ctx), listener.GetContext());
         }
 
         static void Listen(object ctx)
@@ -56,9 +55,7 @@ namespace Fibrinogen
             {
                 var name = context.Request.Url.Segments[1].Replace("/", "");
                 var urlparams = context.Request.Url.Segments.Skip(2).Select(s => s.Replace("/", ""));
-                if (!callbackMap.ContainsKey(name))
-                    return;
-                var res = callbackMap[name](context.Request);
+                var res = callback(context.Request);
                 byte[] buf = Encoding.UTF8.GetBytes(res);
                 context.Response.ContentLength64 = buf.Length;
                 context.Response.OutputStream.Write(buf, 0, buf.Length);
