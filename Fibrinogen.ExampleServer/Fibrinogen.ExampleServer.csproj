@@ -9,4 +9,16 @@
     <ProjectReference Include="..\Fibrinogen\Fibrinogen.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="index.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="posts\Day1.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="posts\Day2.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
