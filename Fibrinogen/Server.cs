@@ -58,6 +58,8 @@ namespace Fibrinogen
                 var res = callback(context.Request);
                 byte[] buf = Encoding.UTF8.GetBytes(res);
                 context.Response.ContentLength64 = buf.Length;
+                context.Response.ContentType = "text/html; charset=utf-8";
+                context.Response.ContentEncoding = Encoding.UTF8;
                 context.Response.OutputStream.Write(buf, 0, buf.Length);
             }
             catch { }
