@@ -7,11 +7,11 @@ namespace Fibrinogen.ExampleServer
     {
         static void Main(string[] args)
         {
-            FileServer.BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            FileServer.Start();
-            Console.Write("FileServer is running! press ENTER key to stop");
+            var server = new LogServer("log.txt");
+            server.Start();
+            Console.Write("Server is running! press ENTER key to stop");
             Console.Read();
-            FileServer.Stop();
+            server.Stop();
         }
     }
 }

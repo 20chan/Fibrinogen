@@ -6,21 +6,12 @@ using Markdig;
 
 namespace Fibrinogen
 {
-    public static class MarkdownServer
+    public class MarkdownServer : Server
     {
-        public static string BaseDirectory;
+        public string BaseDirectory;
         const string _404Page = @"<body><h2>404 Not Found ¯\_(ツ)_/¯</h2></body>";
-
-        public static void Start()
-        {
-            Server.Register(RequestHandler);
-            Server.Start();
-        }
-
-        public static void Stop()
-            => Server.Stop();
-
-        static void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
+        
+        public override void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
             string result = "";
             var parameter = request.Url.Segments.Skip(1).Select(s => s.Replace("/", ""));

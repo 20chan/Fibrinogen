@@ -5,21 +5,12 @@ using System.Linq;
 
 namespace Fibrinogen
 {
-    public class FileServer
+    public class FileServer : Server
     {
-        public static string BaseDirectory;
+        public string BaseDirectory;
         const string _404Page = @"<body><h2>404 Not Found ¯\_(ツ)_/¯</h2></body>";
 
-        public static void Start()
-        {
-            Server.Start();
-            Server.Register(RequestHandler);
-        }
-
-        public static void Stop()
-            => Server.Stop();
-
-        static void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
+        public override void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
             var parameter = request.Url.Segments.Skip(1).Select(s => s.Replace("/", ""));
             var lastpath = Path.Combine(parameter.Take(parameter.Count() - 1).ToArray());
