@@ -8,18 +8,22 @@ namespace Fibrinogen
 {
     public class LogServer : Server
     {
-        readonly Stream file;
+        readonly Stream filew, filer;
         readonly StreamWriter writer;
+        readonly StreamReader reader;
         readonly string path;
         public LogServer(string logPath)
         {
             path = logPath;
             if (!File.Exists(logPath))
-                file = new FileStream(logPath, FileMode.Create);
+                filew = new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.Read);
             else
-                file = new FileStream(logPath, FileMode.Append);
+                filew = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-            writer = new StreamWriter(file);
+            filer = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.Write);
+
+            writer = new StreamWriter(filew);
+            reader = new StreamReader(filer);
             writer.WriteLine($"{DateTime.Now} Logging started");
         }
 
@@ -29,17 +33,17 @@ namespace Fibrinogen
                 && request.Url.Segments.Length == 2
                 && request.Url.Segments[1].StartsWith("viewlogs"))
             {
-                var buf = File.ReadAllBytes(path);
-                response.ContentLength64 = buf.Length;
+                filer.Position = 0;
+                reader.DiscardBufferedData();
                 response.ContentType = "text/plain; charset=utf-8";
                 response.ContentEncoding = Encoding.UTF8;
-                response.OutputStream.Write(buf, 0, buf.Length);
+                filer.CopyTo(response.OutputStream);
                 response.OutputStream.Flush();
                 return;
             }
             if (request.HttpMethod != "POST"
                 || request.Url.Segments.Length != 2
-                || request.Url.Segments[1].StartsWith("log/"))
+                || !request.Url.Segments[1].StartsWith("log"))
             {
                 response.StatusCode = 400;
                 return;
