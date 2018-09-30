@@ -41,7 +41,9 @@ namespace Fibrinogen
             var context = ctx as HttpListenerContext;
             try
             {
-                var name = context.Request.Url.Segments[1].Replace("/", "");
+                string name = "";
+                if (context.Request.Url.Segments.Length > 1)
+                    name = context.Request.Url.Segments[1].Replace("/", "");
                 var urlparams = context.Request.Url.Segments.Skip(2).Select(s => s.Replace("/", ""));
                 RequestHandler(context.Request, context.Response);
             }
