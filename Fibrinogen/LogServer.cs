@@ -37,7 +37,7 @@ namespace Fibrinogen
                 && segfixed[1].StartsWith("viewlogs"))
             {
                 int num = 0;
-                if (segfixed[1] == "viewlogs")
+                if (segfixed[1] == "viewlogs" || segfixed[1] == "viewlogs-")
                     num = 0;
                 else
                     num = int.Parse(viewlogsRegex.Match(segfixed[1]).Groups[1].Value);
@@ -59,7 +59,7 @@ namespace Fibrinogen
                 && request.Url.Segments[1].StartsWith("log"))
             {
                 int num = 0;
-                if (segfixed[1] == "log")
+                if (segfixed[1] == "log" || segfixed[1] == "log-")
                     num = 0;
                 else
                     num = int.Parse(logRegex.Match(segfixed[1]).Groups[1].Value);
