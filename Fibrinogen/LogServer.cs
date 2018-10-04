@@ -2,61 +2,88 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Fibrinogen
 {
+    /// <summary>
+    /// localhost/viewlogs -> localhost/viewlogs-0
+    /// localhost/log -> localhost/log-0
+    /// </summary>
     public class LogServer : Server
     {
-        readonly Stream filew, filer;
-        readonly StreamWriter writer;
-        readonly StreamReader reader;
-        readonly string path;
-        public LogServer(string logPath)
+        const string _404Page = @"<body><h2>404 Not Found ¯\_(ツ)_/¯</h2></body>";
+        readonly Regex viewlogsRegex, logRegex;
+        readonly string logdir;
+        Logger[] loggers = new Logger[10];
+        public LogServer(string logDirectory)
         {
-            path = logPath;
-            if (!File.Exists(logPath))
-                filew = new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.Read);
-            else
-                filew = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.Read);
+            logdir = logDirectory;
 
-            filer = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.Write);
+            viewlogsRegex = new Regex(@"viewlogs-([0-9])");
+            logRegex = new Regex(@"log-([0-9])");
 
-            writer = new StreamWriter(filew);
-            reader = new StreamReader(filer);
-            writer.WriteLine($"{DateTime.Now} Logging started");
+            for (int i = 0; i < 10; i++)
+                loggers[i] = new Logger(Path.Combine(logdir, $"log-{i}.txt"));
         }
 
         public override void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
-         {
+        {
+            var segfixed = request.Url.Segments.Select(s => s.Replace("/", "")).ToArray();
             if (request.HttpMethod == "GET"
                 && request.Url.Segments.Length == 2
-                && request.Url.Segments[1].StartsWith("viewlogs"))
+                && segfixed[1].StartsWith("viewlogs"))
             {
-                filer.Position = 0;
-                reader.DiscardBufferedData();
+                int num = 0;
+                if (segfixed[1] == "viewlogs")
+                    num = 0;
+                else
+                    num = int.Parse(viewlogsRegex.Match(segfixed[1]).Groups[1].Value);
+
+                if (num > loggers.Length)
+                {
+                    _404(); return;
+                }
+
+                loggers[num].ClearReader();
                 response.ContentType = "text/plain; charset=utf-8";
                 response.ContentEncoding = Encoding.UTF8;
-                filer.CopyTo(response.OutputStream);
+                loggers[num].FileR.CopyTo(response.OutputStream);
                 response.OutputStream.Flush();
                 return;
             }
-            if (request.HttpMethod != "POST"
-                || request.Url.Segments.Length != 2
-                || !request.Url.Segments[1].StartsWith("log"))
+            if (request.HttpMethod == "POST"
+                && request.Url.Segments.Length == 2
+                && request.Url.Segments[1].StartsWith("log"))
             {
-                response.StatusCode = 400;
+                int num = 0;
+                if (segfixed[1] == "log")
+                    num = 0;
+                else
+                    num = int.Parse(logRegex.Match(segfixed[1]).Groups[1].Value);
+
+                var body = "";
+                using (var reader = new StreamReader(request.InputStream))
+                    body = reader.ReadToEnd();
+
+                loggers[num].Writer.WriteLine(body);
+                loggers[num].Writer.Flush();
                 return;
             }
 
-            var body = "";
-            using (var reader = new StreamReader(request.InputStream))
-                body = reader.ReadToEnd();
+            _404();
 
-            Console.WriteLine($"got one!: {body}");
-            
-            writer.WriteLine(body);
-            writer.Flush();
+            void _404() {
+                var buf = Encoding.UTF8.GetBytes(_404Page);
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                response.ContentLength64 = buf.Length;
+                response.ContentType = "text/html; charset=utf-8";
+                response.ContentEncoding = Encoding.UTF8;
+                response.OutputStream.Write(buf, 0, buf.Length);
+                response.OutputStream.Flush();
+            }
         }
     }
 }

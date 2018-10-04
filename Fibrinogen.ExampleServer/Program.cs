@@ -7,7 +7,7 @@ namespace Fibrinogen.ExampleServer
     {
         static void Main(string[] args)
         {
-            var server = new LogServer("log.txt");
+            var server = new LogServer("");
             server.Start();
             Console.Write("Server is running! press ENTER key to stop");
             Console.Read();
