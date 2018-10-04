@@ -6,12 +6,11 @@ using Markdig;
 
 namespace Fibrinogen
 {
-    public class MarkdownServer : Server
+    public class MarkdownServer : IRouter
     {
         public string BaseDirectory;
-        const string _404Page = @"<body><h2>404 Not Found ¯\_(ツ)_/¯</h2></body>";
         
-        public override void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
+        public bool RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
             string result = "";
             var parameter = request.Url.Segments.Skip(1).Select(s => s.Replace("/", ""));
@@ -20,10 +19,7 @@ namespace Fibrinogen
             var file = Path.Combine(fullpath, $"{parameter.Last()}.md");
 
             if (!Directory.Exists(fullpath) || !File.Exists(file))
-            {
-                response.StatusCode = (int)HttpStatusCode.NotFound;
-                result = _404Page;
-            }
+                return false;
             else
             {
                 var content = File.ReadAllText(file);
@@ -37,6 +33,8 @@ namespace Fibrinogen
             response.ContentEncoding = Encoding.UTF8;
             response.OutputStream.Write(buf, 0, buf.Length);
             response.OutputStream.Flush();
+
+            return true;
         }
     }
 }

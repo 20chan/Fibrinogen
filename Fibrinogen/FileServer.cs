@@ -5,29 +5,18 @@ using System.Linq;
 
 namespace Fibrinogen
 {
-    public class FileServer : Server
+    public class FileServer : IRouter
     {
         public string BaseDirectory;
-        const string _404Page = @"<body><h2>404 Not Found ¯\_(ツ)_/¯</h2></body>";
 
-        public override void RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
+        public bool RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
             var parameter = request.Url.Segments.Skip(1).Select(s => s.Replace("/", ""));
             var lastpath = Path.Combine(parameter.Take(parameter.Count() - 1).ToArray());
             var fullpath = Path.Combine(BaseDirectory, lastpath, parameter.Last());
 
             if (!File.Exists(fullpath))
-            {
-                var buf = Encoding.UTF8.GetBytes(_404Page);
-
-                response.StatusCode = (int)HttpStatusCode.NotFound;
-                response.ContentLength64 = buf.Length;
-                response.ContentType = "text/html; charset=utf-8";
-                response.ContentEncoding = Encoding.UTF8;
-                response.OutputStream.Write(buf, 0, buf.Length);
-                response.OutputStream.Flush();
-                return;
-            }
+                return false;
 
             using (var input = new FileStream(fullpath, FileMode.Open))
             {
@@ -39,6 +28,8 @@ namespace Fibrinogen
                     response.OutputStream.Write(buf, 0, nbytes);
                 response.OutputStream.Flush();
             }
+
+            return true;
         }
     }
 }
