@@ -22,8 +22,8 @@ namespace Fibrinogen
         {
             logdir = logDirectory;
 
-            viewlogsRegex = new Regex(@"viewlogs-([0-9])");
-            logRegex = new Regex(@"log-([0-9])");
+            viewlogsRegex = new Regex(@"viewlogs-([0-9]+)");
+            logRegex = new Regex(@"log-([0-9]+)");
 
             for (int i = 0; i < 10; i++)
                 loggers[i] = new Logger(Path.Combine(logdir, $"log-{i}.txt"));
@@ -40,9 +40,16 @@ namespace Fibrinogen
                 if (segfixed[1] == "viewlogs" || segfixed[1] == "viewlogs-")
                     num = 0;
                 else
-                    num = int.Parse(viewlogsRegex.Match(segfixed[1]).Groups[1].Value);
+                {
+                    var matches = viewlogsRegex.Match(segfixed[1]);
+                    if (matches.Groups.Count < 2)
+                    {
+                        _404(); return;
+                    }
+                    num = int.Parse(matches.Groups[1].Value);
+                }
 
-                if (num > loggers.Length)
+                if (num >= loggers.Length)
                 {
                     _404(); return;
                 }
@@ -62,7 +69,19 @@ namespace Fibrinogen
                 if (segfixed[1] == "log" || segfixed[1] == "log-")
                     num = 0;
                 else
-                    num = int.Parse(logRegex.Match(segfixed[1]).Groups[1].Value);
+                {
+                    var matches = logRegex.Match(segfixed[1]);
+                    if (matches.Groups.Count < 2)
+                    {
+                        _404(); return;
+                    }
+                    num = int.Parse(matches.Groups[1].Value);
+                }
+
+                if (num >= loggers.Length)
+                {
+                    _404(); return;
+                }
 
                 var body = "";
                 using (var reader = new StreamReader(request.InputStream))
