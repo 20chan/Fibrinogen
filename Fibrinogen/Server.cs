@@ -20,6 +20,7 @@ namespace Fibrinogen
         public Server(params IRouter[] router)
         {
             listener = new HttpListener();
+            listener.IgnoreWriteExceptions = true;
             routers = new List<IRouter>();
 
             routers.AddRange(router);
@@ -73,7 +74,10 @@ namespace Fibrinogen
             }
             finally
             {
-                context.Response.OutputStream.Close();
+                try {
+                    context.Response.OutputStream.Close();
+                }
+                catch { }
             }
         }
     }
