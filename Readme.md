@@ -1,4 +1,8 @@
-# Fibrinogen
+# DEPRECATED - Use [CreamRoll](https://github.com/phillyai/CreamRoll) instead.
+
+---
+
+# Fibrionogen
 
 Fibrionogen is a simple static website generator written in C# (.NET Core). Inspired from [Serum by Dalgona](https://github.com/Dalgona/Serum).
 
